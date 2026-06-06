@@ -1,4 +1,5 @@
 #include "ui/MainWindow.h"
+#include <QApplication>
 #include "api/ApiClient.h"
 #include "api/ApiModels.h"
 #include "db/DatabaseManager.h"
@@ -228,12 +229,12 @@ void MainWindow::setupStatusBar()
 void MainWindow::applyTheme(const QString &theme)
 {
     if (theme == QStringLiteral("light")) {
-        qApp->setStyleSheet(
+        qobject_cast<QApplication*>(qApp)->setStyleSheet(
             "QMainWindow { background: #f5f5f5; }"
             "QWidget { background: #f5f5f5; color: #333333; }");
     } else {
         // Dark theme (Catppuccin Mocha palette)
-        qApp->setStyleSheet(
+        qobject_cast<QApplication*>(qApp)->setStyleSheet(
             "QMainWindow { background: #1e1e2e; }"
             "QWidget { color: #cdd6f4; }"
             "QScrollBar:vertical { background: #181825; width: 8px; }"

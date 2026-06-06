@@ -5,6 +5,7 @@
 #include <QPropertyAnimation>
 #include <QGraphicsScene>
 #include <QFontMetrics>
+#include <QCursor>
 
 // ── Constructor ──────────────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ PlayerToken::PlayerToken(const Models::Player &player,
     setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     setAcceptHoverEvents(true);
     setZValue(10);
-    setCursor(Qt::OpenHandCursor);
+    setCursor(QCursor(Qt::OpenHandCursor));
 }
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ void PlayerToken::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     m_dragging  = true;
     m_dragStart = pos();
-    setCursor(Qt::ClosedHandCursor);
+    setCursor(QCursor(Qt::ClosedHandCursor));
     setZValue(100);
     QGraphicsObject::mousePressEvent(event);
 }
@@ -133,7 +134,7 @@ void PlayerToken::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void PlayerToken::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     m_dragging = false;
-    setCursor(Qt::OpenHandCursor);
+    setCursor(QCursor(Qt::OpenHandCursor));
     setZValue(10);
     emit tokenMoved(m_player.id, scenePos());
     QGraphicsObject::mouseReleaseEvent(event);

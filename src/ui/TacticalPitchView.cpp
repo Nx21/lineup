@@ -65,8 +65,6 @@ PitchScene::PitchScene(QObject *parent)
     setBackgroundBrush(Qt::NoBrush);
     initFormationMap();
     m_formation = QStringLiteral("4-4-2");
-
-    setAcceptDrops(true);
 }
 
 void PitchScene::setFormation(const QString &formation)
