@@ -108,6 +108,7 @@ MainWindow::~MainWindow()
 void MainWindow::setupToolbar()
 {
     auto *tb = addToolBar(QStringLiteral("Main Toolbar"));
+    tb->setObjectName(QStringLiteral("MainToolbar"));
     tb->setMovable(false);
     tb->setIconSize(QSize(16, 16));
     tb->setStyleSheet(
@@ -178,6 +179,7 @@ void MainWindow::setupSidebar()
     sideWidget->setMaximumWidth(260);
 
     auto *dock = new QDockWidget(QStringLiteral("Teams"), this);
+    dock->setObjectName(QStringLiteral("TeamsDock"));
     dock->setWidget(sideWidget);
     dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::LeftDockWidgetArea, dock);
@@ -203,6 +205,7 @@ void MainWindow::setupCentralWidget()
 void MainWindow::setupDocks()
 {
     addDockWidget(Qt::RightDockWidgetArea, m_suggestionPanel);
+    m_suggestionPanel->setObjectName(QStringLiteral("SuggestionDock"));
     m_suggestionPanel->setMinimumWidth(240);
 }
 

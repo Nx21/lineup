@@ -19,8 +19,10 @@ DatabaseManager::DatabaseManager(QObject *parent)
 
 DatabaseManager::~DatabaseManager()
 {
-    if (m_db.isOpen())
-        m_db.close();
+    // Must destroy the QSqlDatabase member before calling removeDatabase,
+    // otherwise Qt warns "connection still in use".
+    m_db.close();
+    m_db = QSqlDatabase(); // reset to invalid/default — releases the handle
     QSqlDatabase::removeDatabase(m_connectionName);
 }
 
