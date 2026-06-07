@@ -29,6 +29,7 @@
 #include <QCloseEvent>
 #include <QAction>
 #include <QMessageBox>
+#include <QSet>
 #include <algorithm>
 
 // ── Constructor / Destructor ─────────────────────────────────────────────────
@@ -95,12 +96,23 @@ MainWindow::MainWindow(QWidget *parent)
 
     restoreWindowState();
 
-    // Seed demo data if the cache is empty (works offline, no API key needed)
+    // Seed / top-up demo data.
+    // Re-seeds whenever a known demo team is missing from the cache,
+    // so adding new teams in DemoData.h is picked up automatically.
     {
-        bool expired = false;
-        const auto cached = m_db->getCachedTeams(&expired);
-        if (cached.isEmpty()) {
-            const auto demoTeams = DemoData::allTeams();
+        const auto demoTeams  = DemoData::allTeams();
+        bool       expired    = false;
+        const auto cached     = m_db->getCachedTeams(&expired);
+
+        // Build set of cached team ids
+        QSet<int> cachedIds;
+        for (const auto &t : cached) cachedIds.insert(t.id);
+
+        bool needsSeed = false;
+        for (const auto &t : demoTeams)
+            if (!cachedIds.contains(t.id)) { needsSeed = true; break; }
+
+        if (needsSeed) {
             m_db->cacheTeams(demoTeams);
             for (const auto &team : demoTeams)
                 m_db->cachePlayers(team.id, team.players);

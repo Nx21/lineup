@@ -231,11 +231,53 @@ inline Models::Team spain()
     return t;
 }
 
+// ── Morocco ───────────────────────────────────────────────────────────────────
+
+inline Models::Team morocco()
+{
+    Models::Team t;
+    t.id = 31; t.name = "Morocco"; t.shortName = "MAR"; t.country = "Morocco";
+    using P = Models::Position;
+    const int tid = 31;
+    t.players = {
+        // Goalkeepers
+        makePlayer(3101,tid,"Yassine Bounou","Yassine","Bounou",33,"Morocco",P::Goalkeeper,1,   74,0,0,0,0,76,16, 0,0,0,3),
+        makePlayer(3102,tid,"Munir Mohamedi","Munir","Mohamedi",33,"Morocco",P::Goalkeeper,16,  65,0,0,0,0,68, 8, 0,0,0,1),
+        makePlayer(3103,tid,"Anas Zniti","Anas","Zniti",34,"Morocco",P::Goalkeeper,23,          62,0,0,0,0,65, 6, 0,0,0,1),
+
+        // Defenders
+        makePlayer(3104,tid,"Achraf Hakimi","Achraf","Hakimi",26,"Morocco",P::Defender,2,       87,5,10,78,42, 0,0, 0,72,18,35),
+        makePlayer(3105,tid,"Noussair Mazraoui","Noussair","Mazraoui",27,"Morocco",P::Defender,12, 83,2,5,80,45, 0,0, 0,65,12,38),
+        makePlayer(3106,tid,"Romain Saïss","Romain","Saïss",34,"Morocco",P::Defender,5,         80,2,2,90,55, 0,0, 0,48,5,80),
+        makePlayer(3107,tid,"Nayef Aguerd","Nayef","Aguerd",28,"Morocco",P::Defender,6,          82,2,2,88,55, 0,0, 0,50,6,78),
+        makePlayer(3108,tid,"Jawad El Yamiq","Jawad","El Yamiq",32,"Morocco",P::Defender,3,      78,1,1,85,50, 0,0, 0,45,4,72),
+        makePlayer(3109,tid,"Yahya Attiat-Allah","Yahya","Attiat-Allah",31,"Morocco",P::Defender,22, 76,1,3,75,40, 0,0, 0,58,8,35),
+        makePlayer(3110,tid,"Achraf Dari","Achraf","Dari",26,"Morocco",P::Defender,4,            79,1,1,82,48, 0,0, 0,50,5,70),
+
+        // Midfielders
+        makePlayer(3111,tid,"Sofyan Amrabat","Sofyan","Amrabat",28,"Morocco",P::Midfielder,4,    84,3,5,105,72, 0,0, 0,60,28,55),
+        makePlayer(3112,tid,"Azzedine Ounahi","Azzedine","Ounahi",24,"Morocco",P::Midfielder,8,  85,5,7,70,45, 0,0, 0,70,38,30),
+        makePlayer(3113,tid,"Selim Amallah","Selim","Amallah",27,"Morocco",P::Midfielder,18,     82,4,6,65,40, 0,0, 0,65,32,28),
+        makePlayer(3114,tid,"Ilias Chair","Ilias","Chair",27,"Morocco",P::Midfielder,14,          83,6,7,55,35, 0,0, 0,68,36,22),
+        makePlayer(3115,tid,"Bilal El Khannouss","Bilal","El Khannouss",21,"Morocco",P::Midfielder,20, 84,6,9,50,30, 0,0, 0,72,40,18),
+        makePlayer(3116,tid,"Abdessamad Ezzalzouli","Abdessamad","Ezzalzouli",23,"Morocco",P::Midfielder,11, 80,5,8,45,25, 0,0, 0,75,35,15),
+
+        // Forwards
+        makePlayer(3117,tid,"Hakim Ziyech","Hakim","Ziyech",32,"Morocco",P::Forward,7,           84,12,14,12,5, 0,0,62,72,38,12),
+        makePlayer(3118,tid,"Youssef En-Nesyri","Youssef","En-Nesyri",27,"Morocco",P::Forward,9, 68,22,6,10,4, 0,0,68,55,16,42),
+        makePlayer(3119,tid,"Sofiane Boufal","Sofiane","Boufal",31,"Morocco",P::Forward,17,       76,10,10,10,4, 0,0,58,75,28,10),
+        makePlayer(3120,tid,"Zakaria Aboukhlal","Zakaria","Aboukhlal",24,"Morocco",P::Forward,19, 70,10,7,10,4, 0,0,60,70,22,10),
+        makePlayer(3121,tid,"Ibrahim Diaz","Ibrahim","Diaz",23,"Morocco",P::Forward,21,            68, 8,6, 8,3, 0,0,55,68,18, 8),
+        makePlayer(3122,tid,"Walid Cheddira","Walid","Cheddira",26,"Morocco",P::Forward,11,        65,12,4, 8,3, 0,0,62,52,14,28),
+    };
+    return t;
+}
+
 // ── All teams ─────────────────────────────────────────────────────────────────
 
 inline QVector<Models::Team> allTeams()
 {
-    return { brazil(), france(), england(), argentina(), germany(), spain() };
+    return { brazil(), france(), england(), argentina(), germany(), spain(), morocco() };
 }
 
 } // namespace DemoData
