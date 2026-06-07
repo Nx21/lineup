@@ -1,10 +1,64 @@
+# ── Build artefacts ───────────────────────────────────────────────────────────
 build/
 *.o
 *.a
 *.so
-moc_*.cpp
-qrc_*.cpp
+*.so.*
+*.dll
+*.dylib
+*.exe
+
+# ── CMake ─────────────────────────────────────────────────────────────────────
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+CTestTestfile.cmake
 Makefile
+install_manifest.txt
+Testing/
+
+# ── Qt auto-generated ─────────────────────────────────────────────────────────
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*_autogen/
+.qt/
+
+# ── Compiled binaries (in-source) ─────────────────────────────────────────────
+WorldCupAnalyst
+test_suggestion_engine
+
+# ── Qt Creator ────────────────────────────────────────────────────────────────
+*.pro.user
+*.qmlproject.user
+*.creator
+*.creator.user
+*.config
+*.files
+*.includes
+CMakeLists.txt.user
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── SQLite cache ──────────────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env
+*.key
