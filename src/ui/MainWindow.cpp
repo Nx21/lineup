@@ -490,14 +490,21 @@ void MainWindow::onAwayFormationChanged(const QString &formation)
 
 void MainWindow::onSuggestLineup()
 {
-    if (m_homeTeamPlayers.isEmpty()) {
-        statusBar()->showMessage(QStringLiteral("Please select a home team first."), 3000);
+    m_suggestionForHome = m_selectingHome;
+    const auto &players   = m_suggestionForHome ? m_homeTeamPlayers : m_awayTeamPlayers;
+    const auto &formation = m_suggestionForHome ? m_formation       : m_awayFormation;
+    const auto &teamLabel = m_suggestionForHome ? m_homeTeamLabel->text() : m_awayTeamLabel->text();
+
+    if (players.isEmpty()) {
+        statusBar()->showMessage(
+            m_suggestionForHome ? QStringLiteral("Please select a home team first.")
+                                : QStringLiteral("Please select an away team first."), 3000);
         return;
     }
-    const auto suggestions = m_engine->suggestLineup(m_formation, m_homeTeamPlayers);
+    const auto suggestions = m_engine->suggestLineup(formation, players);
     m_suggestionPanel->setSuggestions(suggestions);
     statusBar()->showMessage(
-        QString("Lineup suggestion generated for %1.").arg(m_formation), 3000);
+        QString("Lineup suggestion generated for %1 (%2).").arg(teamLabel, formation), 3000);
 }
 
 void MainWindow::onApplySuggestion(
@@ -508,18 +515,22 @@ void MainWindow::onApplySuggestion(
     for (const auto &sp : suggestions)
         xi.append(sp.player);
 
-    m_pitchView->setTeamPlayers(xi, true, m_homeColor);
+    const bool   isHome = m_suggestionForHome;
+    const QColor color  = isHome ? m_homeColor : m_awayColor;
+    m_pitchView->setTeamPlayers(xi, isHome, color);
     statusBar()->showMessage(QStringLiteral("Lineup applied to pitch."), 3000);
 }
 
 void MainWindow::onCompareFormations()
 {
-    if (m_homeTeamPlayers.isEmpty()) {
-        statusBar()->showMessage(QStringLiteral("Please select a home team first."), 3000);
+    const auto &players = m_suggestionForHome ? m_homeTeamPlayers : m_awayTeamPlayers;
+    if (players.isEmpty()) {
+        statusBar()->showMessage(
+            m_suggestionForHome ? QStringLiteral("Please select a home team first.")
+                                : QStringLiteral("Please select an away team first."), 3000);
         return;
     }
-    const QMap<QString, double> scores =
-        m_engine->compareFormations(m_homeTeamPlayers);
+    const QMap<QString, double> scores = m_engine->compareFormations(players);
     m_suggestionPanel->setCompareData(scores);
 }
 

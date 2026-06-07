@@ -110,7 +110,9 @@ private:
     QColor                   m_awayColor;    // default #C62828 (red)
 
     // track whether next playersReceived is for home or away
-    bool m_loadingForHome = true;
+    bool m_loadingForHome    = true;
+    // track which team the current suggestion panel results are for
+    bool m_suggestionForHome = true;
 
     void saveWindowState();
     void restoreWindowState();
