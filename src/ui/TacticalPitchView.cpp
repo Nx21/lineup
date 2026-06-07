@@ -5,6 +5,7 @@
 #include <QGraphicsSceneDragDropEvent>
 #include <QMimeData>
 #include <QLinearGradient>
+#include <QResizeEvent>
 
 // ── Formation map ─────────────────────────────────────────────────────────────
 // Positions as (xFrac, yFrac) for HOME team.
@@ -138,6 +139,48 @@ void PitchScene::clearTokens()
     for (PlayerToken *t : m_awayTokens) { removeItem(t); delete t; }
     m_homeTokens.clear();
     m_awayTokens.clear();
+}
+
+bool PitchScene::hasToken(int playerId) const
+{
+    for (const PlayerToken *t : m_homeTokens)
+        if (t->player().id == playerId) return true;
+    for (const PlayerToken *t : m_awayTokens)
+        if (t->player().id == playerId) return true;
+    return false;
+}
+
+bool PitchScene::addSingleToken(const Models::Player &player,
+                                 const QPointF        &scenePos,
+                                 bool                  homeTeam,
+                                 const QColor         &color)
+{
+    if (hasToken(player.id)) return false;   // already on pitch
+
+    // Snap to nearest empty formation slot
+    const QVector<QPointF> snapPts = formationPositions(m_formation, homeTeam);
+    auto &tokens = homeTeam ? m_homeTokens : m_awayTokens;
+
+    // Find nearest slot not already occupied by another token
+    QPointF bestPos = scenePos;
+    qreal   bestDist = 1e9;
+    for (const QPointF &sp : snapPts) {
+        // Check if this slot is already taken
+        bool taken = false;
+        for (const PlayerToken *t : tokens)
+            if (QLineF(t->pos(), sp).length() < 5.0) { taken = true; break; }
+        if (taken) continue;
+
+        const qreal d = QLineF(scenePos, sp).length();
+        if (d < bestDist) { bestDist = d; bestPos = sp; }
+    }
+
+    auto *token = new PlayerToken(player, color);
+    addItem(token);
+    token->setPos(bestPos);
+    connect(token, &PlayerToken::tokenMoved, this, &PitchScene::playerDroppedOnPitch);
+    tokens.append(token);
+    return true;
 }
 
 // ── Drag & drop (from roster) ─────────────────────────────────────────────────
@@ -300,12 +343,19 @@ TacticalPitchView::TacticalPitchView(QWidget *parent)
     setDragMode(QGraphicsView::NoDrag);
     setAcceptDrops(true);
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setStyleSheet("background: transparent; border: none;");
 
     connect(m_scene, &PitchScene::playerDroppedOnPitch,
             this,    &TacticalPitchView::playerDroppedOnPitch);
+}
+
+void TacticalPitchView::resizeEvent(QResizeEvent *event)
+{
+    QGraphicsView::resizeEvent(event);
+    fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
 QString TacticalPitchView::formation() const
@@ -330,6 +380,14 @@ void TacticalPitchView::setTeamPlayers(const QVector<Models::Player> &players,
 void TacticalPitchView::clearTokens()
 {
     m_scene->clearTokens();
+}
+
+bool TacticalPitchView::addPlayerToken(const Models::Player &player,
+                                        const QPointF        &sceneDropPos,
+                                        bool                  homeTeam,
+                                        const QColor         &color)
+{
+    return m_scene->addSingleToken(player, sceneDropPos, homeTeam, color);
 }
 
 QImage TacticalPitchView::exportToImage() const

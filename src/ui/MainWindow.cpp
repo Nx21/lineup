@@ -203,23 +203,26 @@ void MainWindow::setupSidebar()
 
 void MainWindow::setupCentralWidget()
 {
-    // Central: pitch + roster stacked vertically on right
-    auto *splitter = new QSplitter(Qt::Horizontal, this);
-    splitter->setStyleSheet("QSplitter::handle { background: #313244; width: 3px; }");
-
-    splitter->addWidget(m_pitchView);
-    splitter->addWidget(m_rosterWidget);
-    splitter->setStretchFactor(0, 3);
-    splitter->setStretchFactor(1, 1);
-
-    setCentralWidget(splitter);
+    // Pitch takes all the central area — no competition with roster
+    setCentralWidget(m_pitchView);
 }
 
 void MainWindow::setupDocks()
 {
-    addDockWidget(Qt::RightDockWidgetArea, m_suggestionPanel);
+    // Right dock: roster on top, suggestions below
+    auto *rosterDock = new QDockWidget(QStringLiteral("Player Roster"), this);
+    rosterDock->setObjectName(QStringLiteral("RosterDock"));
+    rosterDock->setWidget(m_rosterWidget);
+    rosterDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    rosterDock->setMinimumWidth(280);
+    addDockWidget(Qt::RightDockWidgetArea, rosterDock);
+
     m_suggestionPanel->setObjectName(QStringLiteral("SuggestionDock"));
-    m_suggestionPanel->setMinimumWidth(240);
+    m_suggestionPanel->setMinimumWidth(280);
+    addDockWidget(Qt::RightDockWidgetArea, m_suggestionPanel);
+
+    // Stack them vertically in the right area
+    splitDockWidget(rosterDock, m_suggestionPanel, Qt::Vertical);
 }
 
 void MainWindow::setupStatusBar()
@@ -416,12 +419,17 @@ void MainWindow::onApiError(const QString &error)
 
 void MainWindow::onPlayerDroppedOnPitch(int playerId, QPointF scenePos)
 {
-    Q_UNUSED(scenePos)
     // Find the player in the current roster
     for (const Models::Player &p : m_currentPlayers) {
         if (p.id == playerId) {
-            statusBar()->showMessage(
-                QString("Placed %1 on pitch.").arg(p.name), 2000);
+            const bool placed = m_pitchView->addPlayerToken(
+                p, scenePos, true, QColor(0x1565C0));
+            if (placed)
+                statusBar()->showMessage(
+                    QString("Placed %1 on pitch.").arg(p.name), 2000);
+            else
+                statusBar()->showMessage(
+                    QString("%1 is already on the pitch.").arg(p.name), 2000);
             return;
         }
     }

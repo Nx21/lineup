@@ -31,8 +31,6 @@ public:
                         bool                           homeTeam,
                         const QColor                  &color);
 
-    void clearTokens();
-
     // Returns the 11 snap positions for the given formation.
     // Positions are in scene coordinates.
     QVector<QPointF> formationPositions(const QString &formation,
@@ -40,6 +38,18 @@ public:
 
     // Find the nearest snap position to a scene point
     QPointF nearestSnapPosition(const QPointF &scenePos, bool homeTeam) const;
+
+    void clearTokens();
+
+    // Add a single token at (or snapped to) a scene position.
+    // Returns false if a token for this player is already on the pitch.
+    bool addSingleToken(const Models::Player &player,
+                        const QPointF        &scenePos,
+                        bool                  homeTeam,
+                        const QColor         &color);
+
+    // Returns true if a token for playerId already exists on the pitch
+    bool hasToken(int playerId) const;
 
 signals:
     void playerDroppedOnPitch(int playerId, QPointF scenePos);
@@ -83,7 +93,17 @@ public:
                         bool                           homeTeam,
                         const QColor                  &color);
 
+    // Drop a single player token at the nearest formation snap position.
+    // homeTeam=true places in the bottom half (home).
+    // Returns true if the token was placed (false if duplicate player already on pitch).
+    bool addPlayerToken(const Models::Player &player,
+                        const QPointF        &sceneDropPos,
+                        bool                  homeTeam,
+                        const QColor         &color);
+
     void clearTokens();
+
+    PitchScene *pitchScene() const { return m_scene; }
 
     // Render the current view to an image (for PNG export)
     QImage exportToImage() const;
@@ -91,6 +111,9 @@ public:
 signals:
     void formationChanged(const QString &formation);
     void playerDroppedOnPitch(int playerId, QPointF scenePos);
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     PitchScene *m_scene;
