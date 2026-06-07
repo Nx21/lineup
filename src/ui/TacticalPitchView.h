@@ -51,8 +51,12 @@ public:
     // Returns true if a token for playerId already exists on the pitch
     bool hasToken(int playerId) const;
 
+    // Remove the token for playerId from the pitch. Returns true if found.
+    bool removeToken(int playerId);
+
 signals:
-    void playerDroppedOnPitch(int playerId, QPointF scenePos);
+    void playerDroppedOnPitch   (int playerId, QPointF scenePos);
+    void tokenRemovedFromPitch  (int playerId);
 
 protected:
     void drawBackground(QPainter *painter, const QRectF &rect) override;
@@ -101,6 +105,9 @@ public:
                         bool                  homeTeam,
                         const QColor         &color);
 
+    // Remove the token for playerId. Returns true if found.
+    bool removePlayerToken(int playerId);
+
     void clearTokens();
 
     PitchScene *pitchScene() const { return m_scene; }
@@ -109,8 +116,9 @@ public:
     QImage exportToImage() const;
 
 signals:
-    void formationChanged(const QString &formation);
-    void playerDroppedOnPitch(int playerId, QPointF scenePos);
+    void formationChanged       (const QString &formation);
+    void playerDroppedOnPitch   (int playerId, QPointF scenePos);
+    void playerRemovedFromPitch (int playerId);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

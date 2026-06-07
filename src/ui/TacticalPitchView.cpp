@@ -127,8 +127,8 @@ void PitchScene::setTeamPlayers(const QVector<Models::Player> &players,
         auto *token = new PlayerToken(players[i], color);
         addItem(token);
         token->setPos(positions[i]);
-        connect(token, &PlayerToken::tokenMoved,
-                this,  &PitchScene::playerDroppedOnPitch);
+        connect(token, &PlayerToken::tokenMoved,      this, &PitchScene::playerDroppedOnPitch);
+        connect(token, &PlayerToken::removeRequested, this, &PitchScene::removeToken);
         tokens.append(token);
     }
 }
@@ -148,6 +148,23 @@ bool PitchScene::hasToken(int playerId) const
     for (const PlayerToken *t : m_awayTokens)
         if (t->player().id == playerId) return true;
     return false;
+}
+
+bool PitchScene::removeToken(int playerId)
+{
+    auto removeFrom = [&](QVector<PlayerToken*> &tokens) -> bool {
+        for (int i = 0; i < tokens.size(); ++i) {
+            if (tokens[i]->player().id == playerId) {
+                PlayerToken *t = tokens.takeAt(i);
+                removeItem(t);
+                t->deleteLater();
+                emit tokenRemovedFromPitch(playerId);
+                return true;
+            }
+        }
+        return false;
+    };
+    return removeFrom(m_homeTokens) || removeFrom(m_awayTokens);
 }
 
 bool PitchScene::addSingleToken(const Models::Player &player,
@@ -178,7 +195,8 @@ bool PitchScene::addSingleToken(const Models::Player &player,
     auto *token = new PlayerToken(player, color);
     addItem(token);
     token->setPos(bestPos);
-    connect(token, &PlayerToken::tokenMoved, this, &PitchScene::playerDroppedOnPitch);
+    connect(token, &PlayerToken::tokenMoved,      this, &PitchScene::playerDroppedOnPitch);
+    connect(token, &PlayerToken::removeRequested, this, &PitchScene::removeToken);
     tokens.append(token);
     return true;
 }
@@ -350,6 +368,8 @@ TacticalPitchView::TacticalPitchView(QWidget *parent)
 
     connect(m_scene, &PitchScene::playerDroppedOnPitch,
             this,    &TacticalPitchView::playerDroppedOnPitch);
+    connect(m_scene, &PitchScene::tokenRemovedFromPitch,
+            this,    &TacticalPitchView::playerRemovedFromPitch);
 }
 
 void TacticalPitchView::resizeEvent(QResizeEvent *event)
@@ -388,6 +408,11 @@ bool TacticalPitchView::addPlayerToken(const Models::Player &player,
                                         const QColor         &color)
 {
     return m_scene->addSingleToken(player, sceneDropPos, homeTeam, color);
+}
+
+bool TacticalPitchView::removePlayerToken(int playerId)
+{
+    return m_scene->removeToken(playerId);
 }
 
 QImage TacticalPitchView::exportToImage() const

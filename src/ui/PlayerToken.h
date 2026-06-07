@@ -31,15 +31,17 @@ public:
     void snapTo(const QPointF &scenePos);
 
 signals:
-    void colorChanged  (const QColor &color);
-    void tokenMoved    (int playerId, QPointF newScenePos);
+    void colorChanged    (const QColor &color);
+    void tokenMoved      (int playerId, QPointF newScenePos);
+    void removeRequested (int playerId);   // emitted on "Remove from XI"
 
 protected:
-    void          mousePressEvent  (QGraphicsSceneMouseEvent *event)       override;
-    void          mouseReleaseEvent(QGraphicsSceneMouseEvent *event)       override;
-    void          mouseMoveEvent   (QGraphicsSceneMouseEvent *event)       override;
-    QVariant      itemChange       (GraphicsItemChange change,
-                                    const QVariant &value)                  override;
+    void          mousePressEvent   (QGraphicsSceneMouseEvent *event)      override;
+    void          mouseReleaseEvent (QGraphicsSceneMouseEvent *event)      override;
+    void          mouseMoveEvent    (QGraphicsSceneMouseEvent *event)      override;
+    void          contextMenuEvent  (QGraphicsSceneContextMenuEvent *event) override;
+    QVariant      itemChange        (GraphicsItemChange change,
+                                     const QVariant &value)                override;
 
 private:
     Models::Player m_player;

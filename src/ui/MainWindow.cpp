@@ -90,9 +90,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_suggestionPanel, &SuggestionPanel::compareFormationsRequested,
             this, &MainWindow::onCompareFormations);
 
-    // Wire pitch drop
+    // Wire pitch drop / remove
     connect(m_pitchView, &TacticalPitchView::playerDroppedOnPitch,
             this, &MainWindow::onPlayerDroppedOnPitch);
+    connect(m_pitchView, &TacticalPitchView::playerRemovedFromPitch,
+            this, &MainWindow::onPlayerRemovedFromPitch);
 
     restoreWindowState();
 
@@ -444,6 +446,22 @@ void MainWindow::onPlayerDroppedOnPitch(int playerId, QPointF scenePos)
             return;
         }
     }
+}
+
+void MainWindow::onPlayerRemovedFromPitch(int playerId)
+{
+    // Find the player name for the status message
+    for (const Models::Player &p : m_currentPlayers) {
+        if (p.id == playerId) {
+            statusBar()->showMessage(
+                QString("Removed %1 from XI — drag a replacement from the roster.")
+                    .arg(p.name), 4000);
+            return;
+        }
+    }
+    statusBar()->showMessage(
+        QStringLiteral("Player removed from XI — drag a replacement from the roster."),
+        4000);
 }
 
 // ── Window state ─────────────────────────────────────────────────────────────

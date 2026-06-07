@@ -2,10 +2,13 @@
 
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneContextMenuEvent>
 #include <QPropertyAnimation>
 #include <QGraphicsScene>
 #include <QFontMetrics>
 #include <QCursor>
+#include <QMenu>
+#include <QAction>
 
 // ── Constructor ──────────────────────────────────────────────────────────────
 
@@ -151,4 +154,27 @@ QVariant PlayerToken::itemChange(GraphicsItemChange change, const QVariant &valu
         return p;
     }
     return QGraphicsObject::itemChange(change, value);
+}
+
+// ── Context menu ──────────────────────────────────────────────────────────────
+
+void PlayerToken::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    // Show a right-click menu with player info + remove option
+    QMenu menu;
+    menu.setTitle(m_player.name);
+
+    // Header action (disabled, shows player name + position)
+    QAction *header = menu.addAction(
+        QString("%1  ·  %2").arg(m_player.name,
+                                  Models::positionToString(m_player.position)));
+    header->setEnabled(false);
+    menu.addSeparator();
+
+    QAction *removeAct = menu.addAction(QStringLiteral("✕  Remove from XI"));
+    removeAct->setToolTip(QStringLiteral("Remove this player and free the slot"));
+
+    QAction *chosen = menu.exec(event->screenPos());
+    if (chosen == removeAct)
+        emit removeRequested(m_player.id);
 }

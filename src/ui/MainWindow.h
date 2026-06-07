@@ -62,7 +62,8 @@ private:
     void onApiError          (const QString &error);
     void onTeamsReceived     (const QVector<Models::Team>   &teams);
     void onPlayersReceived   (int teamId, const QVector<Models::Player> &players);
-    void onPlayerDroppedOnPitch(int playerId, QPointF scenePos);
+    void onPlayerDroppedOnPitch  (int playerId, QPointF scenePos);
+    void onPlayerRemovedFromPitch(int playerId);
 
     // ── Data ──────────────────────────────────────────────────────────────────
     DatabaseManager        *m_db;
