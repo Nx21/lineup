@@ -23,8 +23,12 @@ public:
 
     explicit PitchScene(QObject *parent = nullptr);
 
-    void setFormation(const QString &formation);
-    QString formation() const { return m_formation; }
+    void setFormation(const QString &formation);   // sets home formation (compat)
+    void setHomeFormation(const QString &formation);
+    void setAwayFormation(const QString &formation);
+    QString formation()     const { return m_homeFormation; }
+    QString homeFormation() const { return m_homeFormation; }
+    QString awayFormation() const { return m_awayFormation; }
 
     // Place tokens for a team. homeTeam=true → bottom half.
     void setTeamPlayers(const QVector<Models::Player> &players,
@@ -51,8 +55,11 @@ public:
     // Returns true if a token for playerId already exists on the pitch
     bool hasToken(int playerId) const;
 
-    // Remove the token for playerId from the pitch. Returns true if found.
+    // Remove the token for playerId. Returns true if found.
     bool removeToken(int playerId);
+
+    // Re-color all tokens belonging to one team
+    void setTeamColor(bool homeTeam, const QColor &color);
 
 signals:
     void playerDroppedOnPitch   (int playerId, QPointF scenePos);
@@ -75,7 +82,8 @@ private:
     using FractionList = QVector<QPair<double, double>>;
     QMap<QString, FractionList> m_formationMap;
 
-    QString               m_formation;
+    QString               m_homeFormation;
+    QString               m_awayFormation;
     QVector<PlayerToken*> m_homeTokens;
     QVector<PlayerToken*> m_awayTokens;
 };
@@ -90,8 +98,12 @@ class TacticalPitchView : public QGraphicsView
 public:
     explicit TacticalPitchView(QWidget *parent = nullptr);
 
-    QString formation() const;
-    void    setFormation(const QString &formation);
+    QString formation()     const;
+    QString homeFormation() const;
+    QString awayFormation() const;
+    void    setFormation    (const QString &formation);   // home compat
+    void    setHomeFormation(const QString &formation);
+    void    setAwayFormation(const QString &formation);
 
     void setTeamPlayers(const QVector<Models::Player> &players,
                         bool                           homeTeam,
@@ -107,6 +119,10 @@ public:
 
     // Remove the token for playerId. Returns true if found.
     bool removePlayerToken(int playerId);
+
+    // Re-color all tokens for a team
+    void setHomeTeamColor(const QColor &color);
+    void setAwayTeamColor(const QColor &color);
 
     void clearTokens();
 

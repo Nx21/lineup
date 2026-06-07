@@ -29,8 +29,13 @@
 #include <QCloseEvent>
 #include <QAction>
 #include <QMessageBox>
+#include <QTabWidget>
+#include <QColorDialog>
 #include <QSet>
 #include <algorithm>
+
+static constexpr QColor HOME_COLOR{0x15, 0x65, 0xC0};   // blue
+static constexpr QColor AWAY_COLOR{0xC6, 0x28, 0x28};   // red
 
 // ── Constructor / Destructor ─────────────────────────────────────────────────
 
@@ -39,17 +44,28 @@ MainWindow::MainWindow(QWidget *parent)
     , m_db      (new DatabaseManager(this))
     , m_apiClient(nullptr)
     , m_engine  (new LineupSuggestionEngine(this))
-    , m_pitchView      (new TacticalPitchView(this))
-    , m_rosterWidget   (new PlayerRosterWidget(this))
-    , m_suggestionPanel(new SuggestionPanel(this))
-    , m_teamList       (new QListWidget(this))
-    , m_formationCombo (new QComboBox(this))
-    , m_progressBar    (new QProgressBar(this))
-    , m_statusLabel    (new QLabel(this))
-    , m_suggestBtn     (new QPushButton(QStringLiteral("⚡ Suggest Lineup"), this))
-    , m_exportBtn      (new QPushButton(QStringLiteral("📷 Export PNG"), this))
-    , m_settingsBtn    (new QPushButton(QStringLiteral("⚙ Settings"), this))
-    , m_formation      (QStringLiteral("4-4-2"))
+    , m_pitchView       (new TacticalPitchView(this))
+    , m_rosterWidget    (new PlayerRosterWidget(this))
+    , m_awayRosterWidget(new PlayerRosterWidget(this))
+    , m_suggestionPanel (new SuggestionPanel(this))
+    , m_teamList        (new QListWidget(this))
+    , m_formationCombo  (new QComboBox(this))
+    , m_awayFormationCombo(new QComboBox(this))
+    , m_progressBar     (new QProgressBar(this))
+    , m_statusLabel     (new QLabel(this))
+    , m_homeTeamLabel   (new QLabel(QStringLiteral("— none —"), this))
+    , m_awayTeamLabel   (new QLabel(QStringLiteral("— none —"), this))
+    , m_homeSlotBtn     (new QPushButton(QStringLiteral("🏠 Home"), this))
+    , m_awaySlotBtn     (new QPushButton(QStringLiteral("✈ Away"), this))
+    , m_homeColorBtn    (new QPushButton(this))
+    , m_awayColorBtn    (new QPushButton(this))
+    , m_suggestBtn      (new QPushButton(QStringLiteral("⚡ Suggest Lineup"), this))
+    , m_exportBtn       (new QPushButton(QStringLiteral("📷 Export PNG"), this))
+    , m_settingsBtn     (new QPushButton(QStringLiteral("⚙ Settings"), this))
+    , m_formation       (QStringLiteral("4-4-2"))
+    , m_awayFormation   (QStringLiteral("4-4-2"))
+    , m_homeColor       (HOME_COLOR)
+    , m_awayColor       (AWAY_COLOR)
 {
     setWindowTitle(QStringLiteral("WorldCup Analyst — 2026 FIFA World Cup"));
     setMinimumSize(1200, 750);
@@ -141,10 +157,14 @@ void MainWindow::setupToolbar()
         "QToolBar { background: #181825; border-bottom: 1px solid #313244; spacing: 6px; }"
         "QToolBar::separator { width: 1px; background: #45475a; margin: 4px 2px; }");
 
-    // Formation
-    auto *formLabel = new QLabel(QStringLiteral("  Formation: "), tb);
-    formLabel->setStyleSheet("color: #cdd6f4; font-weight: bold;");
-    tb->addWidget(formLabel);
+    const QString comboStyle =
+        "QComboBox { background: #313244; color: #cdd6f4; "
+        "  border: 1px solid #45475a; padding: 3px 8px; border-radius: 4px; min-width: 90px; }";
+
+    // Home formation
+    auto *formLabelH = new QLabel(QStringLiteral("  Formation(H): "), tb);
+    formLabelH->setStyleSheet("color: #89b4fa; font-weight: bold;");
+    tb->addWidget(formLabelH);
 
     const QStringList formations =
         { QStringLiteral("4-4-2"), QStringLiteral("4-3-3"),
@@ -152,10 +172,20 @@ void MainWindow::setupToolbar()
           QStringLiteral("5-3-2") };
     m_formationCombo->addItems(formations);
     m_formationCombo->setCurrentText(m_formation);
-    m_formationCombo->setStyleSheet(
-        "QComboBox { background: #313244; color: #cdd6f4; "
-        "  border: 1px solid #45475a; padding: 3px 8px; border-radius: 4px; min-width: 90px; }");
+    m_formationCombo->setStyleSheet(comboStyle);
     tb->addWidget(m_formationCombo);
+
+    tb->addSeparator();
+
+    // Away formation
+    auto *formLabelA = new QLabel(QStringLiteral("  Formation(A): "), tb);
+    formLabelA->setStyleSheet("color: #f38ba8; font-weight: bold;");
+    tb->addWidget(formLabelA);
+
+    m_awayFormationCombo->addItems(formations);
+    m_awayFormationCombo->setCurrentText(m_awayFormation);
+    m_awayFormationCombo->setStyleSheet(comboStyle);
+    tb->addWidget(m_awayFormationCombo);
 
     tb->addSeparator();
 
@@ -175,8 +205,10 @@ void MainWindow::setupToolbar()
     tb->addSeparator();
     tb->addWidget(m_settingsBtn);
 
-    connect(m_formationCombo, &QComboBox::currentTextChanged,
-            this, &MainWindow::onFormationChanged);
+    connect(m_formationCombo,     &QComboBox::currentTextChanged,
+            this, &MainWindow::onHomeFormationChanged);
+    connect(m_awayFormationCombo, &QComboBox::currentTextChanged,
+            this, &MainWindow::onAwayFormationChanged);
     connect(m_suggestBtn,  &QPushButton::clicked, this, &MainWindow::onSuggestLineup);
     connect(m_exportBtn,   &QPushButton::clicked, this, &MainWindow::onExportPng);
     connect(m_settingsBtn, &QPushButton::clicked, this, &MainWindow::onOpenSettings);
@@ -187,19 +219,69 @@ void MainWindow::setupSidebar()
     auto *sideWidget = new QWidget(this);
     auto *layout     = new QVBoxLayout(sideWidget);
     layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(4);
 
+    // ── Slot toggle buttons ─────────────────────────────────────────────────
+    auto *slotRow = new QWidget(sideWidget);
+    auto *slotLayout = new QHBoxLayout(slotRow);
+    slotLayout->setContentsMargins(0, 0, 0, 0);
+    slotLayout->setSpacing(4);
+    slotLayout->addWidget(m_homeSlotBtn);
+    slotLayout->addWidget(m_awaySlotBtn);
+    layout->addWidget(slotRow);
+
+    // ── Team info rows ──────────────────────────────────────────────────────
+    auto swatchStyle = [](const QColor &c) {
+        return QString("QPushButton { background:%1; border:2px solid #fff; "
+                       "border-radius:3px; min-width:20px; max-width:20px; "
+                       "min-height:20px; max-height:20px; }")
+               .arg(c.name());
+    };
+
+    m_homeColorBtn->setFixedSize(20, 20);
+    m_homeColorBtn->setStyleSheet(swatchStyle(m_homeColor));
+    m_awayColorBtn->setFixedSize(20, 20);
+    m_awayColorBtn->setStyleSheet(swatchStyle(m_awayColor));
+
+    m_homeTeamLabel->setStyleSheet("color:#89b4fa; font-size:9pt;");
+    m_homeTeamLabel->setTextFormat(Qt::PlainText);
+    m_awayTeamLabel->setStyleSheet("color:#f38ba8; font-size:9pt;");
+    m_awayTeamLabel->setTextFormat(Qt::PlainText);
+
+    auto *homeRow = new QWidget(sideWidget);
+    auto *homeRowLayout = new QHBoxLayout(homeRow);
+    homeRowLayout->setContentsMargins(2, 0, 2, 0);
+    homeRowLayout->setSpacing(4);
+    auto *homeDot = new QLabel(QStringLiteral("🔵"), sideWidget);
+    homeRowLayout->addWidget(homeDot);
+    homeRowLayout->addWidget(m_homeColorBtn);
+    homeRowLayout->addWidget(m_homeTeamLabel, 1);
+
+    auto *awayRow = new QWidget(sideWidget);
+    auto *awayRowLayout = new QHBoxLayout(awayRow);
+    awayRowLayout->setContentsMargins(2, 0, 2, 0);
+    awayRowLayout->setSpacing(4);
+    auto *awayDot = new QLabel(QStringLiteral("🔴"), sideWidget);
+    awayRowLayout->addWidget(awayDot);
+    awayRowLayout->addWidget(m_awayColorBtn);
+    awayRowLayout->addWidget(m_awayTeamLabel, 1);
+
+    layout->addWidget(homeRow);
+    layout->addWidget(awayRow);
+
+    // ── Team list ───────────────────────────────────────────────────────────
     auto *hdr = new QLabel(QStringLiteral("🌍  Teams"), sideWidget);
     hdr->setStyleSheet(
         "font-weight: bold; color: #cba6f7; padding: 4px; font-size: 10pt;");
+    layout->addWidget(hdr);
 
     m_teamList->setStyleSheet(
         "QListWidget { background: #181825; color: #cdd6f4; border: none; }"
         "QListWidget::item { padding: 6px 8px; border-bottom: 1px solid #313244; }"
         "QListWidget::item:selected { background: #45475a; }"
         "QListWidget::item:hover { background: #313244; }");
-
-    layout->addWidget(hdr);
     layout->addWidget(m_teamList, 1);
+
     sideWidget->setStyleSheet("background: #1e1e2e;");
     sideWidget->setMinimumWidth(180);
     sideWidget->setMaximumWidth(260);
@@ -210,8 +292,21 @@ void MainWindow::setupSidebar()
     dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::LeftDockWidgetArea, dock);
 
+    // Initial button styling
+    updateSlotButtonStyles();
+
     connect(m_teamList, &QListWidget::itemClicked,
             this, &MainWindow::onTeamSelected);
+    connect(m_homeSlotBtn, &QPushButton::clicked, this, [this]() {
+        m_selectingHome = true;
+        updateSlotButtonStyles();
+    });
+    connect(m_awaySlotBtn, &QPushButton::clicked, this, [this]() {
+        m_selectingHome = false;
+        updateSlotButtonStyles();
+    });
+    connect(m_homeColorBtn, &QPushButton::clicked, this, &MainWindow::onHomeColorPick);
+    connect(m_awayColorBtn, &QPushButton::clicked, this, &MainWindow::onAwayColorPick);
 }
 
 void MainWindow::setupCentralWidget()
@@ -222,10 +317,18 @@ void MainWindow::setupCentralWidget()
 
 void MainWindow::setupDocks()
 {
-    // Right dock: roster on top, suggestions below
-    auto *rosterDock = new QDockWidget(QStringLiteral("Player Roster"), this);
+    // Right dock: tabbed rosters on top, suggestions below
+    auto *rosterTabs = new QTabWidget(this);
+    rosterTabs->addTab(m_rosterWidget,     QStringLiteral("🏠 Home"));
+    rosterTabs->addTab(m_awayRosterWidget, QStringLiteral("✈ Away"));
+    rosterTabs->setStyleSheet(
+        "QTabWidget::pane { border: none; }"
+        "QTabBar::tab { background: #313244; color: #a6adc8; padding: 5px 12px; }"
+        "QTabBar::tab:selected { background: #45475a; color: #cdd6f4; font-weight: bold; }");
+
+    auto *rosterDock = new QDockWidget(QStringLiteral("Rosters"), this);
     rosterDock->setObjectName(QStringLiteral("RosterDock"));
-    rosterDock->setWidget(m_rosterWidget);
+    rosterDock->setWidget(rosterTabs);
     rosterDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     rosterDock->setMinimumWidth(280);
     addDockWidget(Qt::RightDockWidgetArea, rosterDock);
@@ -234,7 +337,6 @@ void MainWindow::setupDocks()
     m_suggestionPanel->setMinimumWidth(280);
     addDockWidget(Qt::RightDockWidgetArea, m_suggestionPanel);
 
-    // Stack them vertically in the right area
     splitDockWidget(rosterDock, m_suggestionPanel, Qt::Vertical);
 }
 
@@ -288,6 +390,24 @@ void MainWindow::setFormation(const QString &f)
     emit formationChanged(f);
 }
 
+// ── Helper ─────────────────────────────────────────────────────────────────────
+
+void MainWindow::updateSlotButtonStyles()
+{
+    const QString activeHomeStyle =
+        "QPushButton { background:#1565C0; color:white; font-weight:bold; "
+        "border:2px solid #42a5f5; border-radius:4px; padding:5px 12px; }";
+    const QString activeAwayStyle =
+        "QPushButton { background:#C62828; color:white; font-weight:bold; "
+        "border:2px solid #ef9a9a; border-radius:4px; padding:5px 12px; }";
+    const QString inactiveStyle =
+        "QPushButton { background:#313244; color:#a6adc8; "
+        "border:1px solid #45475a; border-radius:4px; padding:5px 12px; }";
+
+    m_homeSlotBtn->setStyleSheet(m_selectingHome ? activeHomeStyle : inactiveStyle);
+    m_awaySlotBtn->setStyleSheet(m_selectingHome ? inactiveStyle   : activeAwayStyle);
+}
+
 // ── Slots ─────────────────────────────────────────────────────────────────────
 
 void MainWindow::onTeamsReceived(const QVector<Models::Team> &teams)
@@ -315,14 +435,18 @@ void MainWindow::onPlayersReceived(int /*teamId*/,
     for (Models::Player &p : scored) {
         p.overallScore = m_engine->scorePlayer(p, p.position);
     }
-    // Sort descending by score
     std::sort(scored.begin(), scored.end(),
               [](const Models::Player &a, const Models::Player &b){
                   return a.overallScore > b.overallScore;
               });
 
-    m_currentPlayers = scored;
-    m_rosterWidget->setPlayers(scored);
+    if (m_loadingForHome) {
+        m_homeTeamPlayers = scored;
+        m_rosterWidget->setPlayers(scored);
+    } else {
+        m_awayTeamPlayers = scored;
+        m_awayRosterWidget->setPlayers(scored);
+    }
     statusBar()->showMessage(
         QString("Loaded %1 players.").arg(scored.size()), 4000);
 }
@@ -331,36 +455,46 @@ void MainWindow::onTeamSelected(QListWidgetItem *item)
 {
     if (!item) return;
     const int teamId = item->data(Qt::UserRole).toInt();
-    if (teamId == m_currentTeamId) return;
-    m_currentTeamId = teamId;
 
-    m_currentPlayers.clear();
-    m_rosterWidget->setPlayers({});
-    m_pitchView->clearTokens();
-    m_suggestionPanel->clearSuggestions();
+    m_loadingForHome = m_selectingHome;
+    if (m_selectingHome) {
+        if (teamId == m_homeTeamId) return;
+        m_homeTeamId = teamId;
+        m_homeTeamPlayers.clear();
+        m_rosterWidget->setPlayers({});
+        m_homeTeamLabel->setText(item->text());
+    } else {
+        if (teamId == m_awayTeamId) return;
+        m_awayTeamId = teamId;
+        m_awayTeamPlayers.clear();
+        m_awayRosterWidget->setPlayers({});
+        m_awayTeamLabel->setText(item->text());
+    }
 
     statusBar()->showMessage(
         QString("Loading players for %1…").arg(item->text()));
     m_apiClient->fetchPlayers(teamId);
 }
 
-void MainWindow::onFormationChanged(const QString &formation)
+void MainWindow::onHomeFormationChanged(const QString &formation)
 {
     setFormation(formation);
-    // Re-apply tokens if a team is already loaded
-    if (!m_currentPlayers.isEmpty()) {
-        m_pitchView->setTeamPlayers(m_currentPlayers, true,
-                                    QColor(0x1565C0)); // home blue
-    }
+}
+
+void MainWindow::onAwayFormationChanged(const QString &formation)
+{
+    if (m_awayFormation == formation) return;
+    m_awayFormation = formation;
+    m_pitchView->setAwayFormation(formation);
 }
 
 void MainWindow::onSuggestLineup()
 {
-    if (m_currentPlayers.isEmpty()) {
-        statusBar()->showMessage(QStringLiteral("Please select a team first."), 3000);
+    if (m_homeTeamPlayers.isEmpty()) {
+        statusBar()->showMessage(QStringLiteral("Please select a home team first."), 3000);
         return;
     }
-    const auto suggestions = m_engine->suggestLineup(m_formation, m_currentPlayers);
+    const auto suggestions = m_engine->suggestLineup(m_formation, m_homeTeamPlayers);
     m_suggestionPanel->setSuggestions(suggestions);
     statusBar()->showMessage(
         QString("Lineup suggestion generated for %1.").arg(m_formation), 3000);
@@ -374,18 +508,18 @@ void MainWindow::onApplySuggestion(
     for (const auto &sp : suggestions)
         xi.append(sp.player);
 
-    m_pitchView->setTeamPlayers(xi, true, QColor(0x1565C0));
+    m_pitchView->setTeamPlayers(xi, true, m_homeColor);
     statusBar()->showMessage(QStringLiteral("Lineup applied to pitch."), 3000);
 }
 
 void MainWindow::onCompareFormations()
 {
-    if (m_currentPlayers.isEmpty()) {
-        statusBar()->showMessage(QStringLiteral("Please select a team first."), 3000);
+    if (m_homeTeamPlayers.isEmpty()) {
+        statusBar()->showMessage(QStringLiteral("Please select a home team first."), 3000);
         return;
     }
     const QMap<QString, double> scores =
-        m_engine->compareFormations(m_currentPlayers);
+        m_engine->compareFormations(m_homeTeamPlayers);
     m_suggestionPanel->setCompareData(scores);
 }
 
@@ -432,14 +566,26 @@ void MainWindow::onApiError(const QString &error)
 
 void MainWindow::onPlayerDroppedOnPitch(int playerId, QPointF scenePos)
 {
-    // Find the player in the current roster
-    for (const Models::Player &p : m_currentPlayers) {
+    // Check home team first
+    for (const Models::Player &p : m_homeTeamPlayers) {
         if (p.id == playerId) {
-            const bool placed = m_pitchView->addPlayerToken(
-                p, scenePos, true, QColor(0x1565C0));
+            const bool placed = m_pitchView->addPlayerToken(p, scenePos, true, m_homeColor);
             if (placed)
                 statusBar()->showMessage(
-                    QString("Placed %1 on pitch.").arg(p.name), 2000);
+                    QString("Placed %1 on pitch (home).").arg(p.name), 2000);
+            else
+                statusBar()->showMessage(
+                    QString("%1 is already on the pitch.").arg(p.name), 2000);
+            return;
+        }
+    }
+    // Check away team
+    for (const Models::Player &p : m_awayTeamPlayers) {
+        if (p.id == playerId) {
+            const bool placed = m_pitchView->addPlayerToken(p, scenePos, false, m_awayColor);
+            if (placed)
+                statusBar()->showMessage(
+                    QString("Placed %1 on pitch (away).").arg(p.name), 2000);
             else
                 statusBar()->showMessage(
                     QString("%1 is already on the pitch.").arg(p.name), 2000);
@@ -450,8 +596,15 @@ void MainWindow::onPlayerDroppedOnPitch(int playerId, QPointF scenePos)
 
 void MainWindow::onPlayerRemovedFromPitch(int playerId)
 {
-    // Find the player name for the status message
-    for (const Models::Player &p : m_currentPlayers) {
+    for (const Models::Player &p : m_homeTeamPlayers) {
+        if (p.id == playerId) {
+            statusBar()->showMessage(
+                QString("Removed %1 from XI — drag a replacement from the roster.")
+                    .arg(p.name), 4000);
+            return;
+        }
+    }
+    for (const Models::Player &p : m_awayTeamPlayers) {
         if (p.id == playerId) {
             statusBar()->showMessage(
                 QString("Removed %1 from XI — drag a replacement from the roster.")
@@ -462,6 +615,34 @@ void MainWindow::onPlayerRemovedFromPitch(int playerId)
     statusBar()->showMessage(
         QStringLiteral("Player removed from XI — drag a replacement from the roster."),
         4000);
+}
+
+// ── Color pickers ─────────────────────────────────────────────────────────────
+
+void MainWindow::onHomeColorPick()
+{
+    const QColor c = QColorDialog::getColor(m_homeColor, this,
+                                            QStringLiteral("Home Team Color"));
+    if (!c.isValid()) return;
+    m_homeColor = c;
+    m_homeColorBtn->setStyleSheet(
+        QString("QPushButton { background:%1; border:2px solid #fff; "
+                "border-radius:3px; min-width:20px; max-width:20px; "
+                "min-height:20px; max-height:20px; }").arg(c.name()));
+    m_pitchView->setHomeTeamColor(c);
+}
+
+void MainWindow::onAwayColorPick()
+{
+    const QColor c = QColorDialog::getColor(m_awayColor, this,
+                                            QStringLiteral("Away Team Color"));
+    if (!c.isValid()) return;
+    m_awayColor = c;
+    m_awayColorBtn->setStyleSheet(
+        QString("QPushButton { background:%1; border:2px solid #fff; "
+                "border-radius:3px; min-width:20px; max-width:20px; "
+                "min-height:20px; max-height:20px; }").arg(c.name()));
+    m_pitchView->setAwayTeamColor(c);
 }
 
 // ── Window state ─────────────────────────────────────────────────────────────

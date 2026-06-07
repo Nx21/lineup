@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QVector>
 #include <QMap>
+#include <QColor>
 #include "api/ApiModels.h"
 
 class ApiClient;
@@ -19,6 +20,7 @@ class QProgressBar;
 class QLabel;
 class QPushButton;
 class QDockWidget;
+class QTabWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -51,19 +53,23 @@ private:
     void applyTheme(const QString &theme);
 
     // ── Slots ─────────────────────────────────────────────────────────────────
-    void onTeamSelected      (QListWidgetItem *item);
-    void onFormationChanged  (const QString   &formation);
-    void onSuggestLineup     ();
-    void onApplySuggestion   (const QVector<Models::SuggestedPlayer> &suggestions);
-    void onCompareFormations ();
-    void onExportPng         ();
-    void onOpenSettings      ();
-    void onLoadingChanged    (bool loading);
-    void onApiError          (const QString &error);
-    void onTeamsReceived     (const QVector<Models::Team>   &teams);
-    void onPlayersReceived   (int teamId, const QVector<Models::Player> &players);
+    void onTeamSelected          (QListWidgetItem *item);
+    void onHomeFormationChanged  (const QString   &formation);
+    void onAwayFormationChanged  (const QString   &formation);
+    void onSuggestLineup         ();
+    void onApplySuggestion       (const QVector<Models::SuggestedPlayer> &suggestions);
+    void onCompareFormations     ();
+    void onExportPng             ();
+    void onOpenSettings          ();
+    void onLoadingChanged        (bool loading);
+    void onApiError              (const QString &error);
+    void onTeamsReceived         (const QVector<Models::Team>   &teams);
+    void onPlayersReceived       (int teamId, const QVector<Models::Player> &players);
     void onPlayerDroppedOnPitch  (int playerId, QPointF scenePos);
     void onPlayerRemovedFromPitch(int playerId);
+    void onHomeColorPick         ();
+    void onAwayColorPick         ();
+    void updateSlotButtonStyles  ();
 
     // ── Data ──────────────────────────────────────────────────────────────────
     DatabaseManager        *m_db;
@@ -72,22 +78,39 @@ private:
 
     // ── UI components ─────────────────────────────────────────────────────────
     TacticalPitchView  *m_pitchView;
-    PlayerRosterWidget *m_rosterWidget;
+    PlayerRosterWidget *m_rosterWidget;      // home roster
+    PlayerRosterWidget *m_awayRosterWidget;  // away roster
     SuggestionPanel    *m_suggestionPanel;
     QListWidget        *m_teamList;
-    QComboBox          *m_formationCombo;
+    QComboBox          *m_formationCombo;    // home formation
+    QComboBox          *m_awayFormationCombo; // away formation
     QProgressBar       *m_progressBar;
     QLabel             *m_statusLabel;
+    QLabel             *m_homeTeamLabel;     // shows selected home team name
+    QLabel             *m_awayTeamLabel;     // shows selected away team name
+    QPushButton        *m_homeSlotBtn;       // sidebar toggle: assign to Home
+    QPushButton        *m_awaySlotBtn;       // sidebar toggle: assign to Away
+    QPushButton        *m_homeColorBtn;      // color swatch, opens QColorDialog
+    QPushButton        *m_awayColorBtn;      // color swatch, opens QColorDialog
     QPushButton        *m_suggestBtn;
     QPushButton        *m_exportBtn;
     QPushButton        *m_settingsBtn;
 
     // ── State ─────────────────────────────────────────────────────────────────
-    QString                  m_formation;
+    QString                  m_formation;     // home
+    QString                  m_awayFormation; // away
     QVector<Models::Team>    m_teams;
-    int                      m_currentTeamId = -1;
-    QVector<Models::Player>  m_currentPlayers;
-    QMap<int, Models::Team>  m_teamIndex;       // id → Team
+    bool                     m_selectingHome = true;  // sidebar toggle state
+    int                      m_homeTeamId    = -1;
+    int                      m_awayTeamId    = -1;
+    QVector<Models::Player>  m_homeTeamPlayers;
+    QVector<Models::Player>  m_awayTeamPlayers;
+    QMap<int, Models::Team>  m_teamIndex;
+    QColor                   m_homeColor;    // default #1565C0 (blue)
+    QColor                   m_awayColor;    // default #C62828 (red)
+
+    // track whether next playersReceived is for home or away
+    bool m_loadingForHome = true;
 
     void saveWindowState();
     void restoreWindowState();

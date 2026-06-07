@@ -65,12 +65,25 @@ PitchScene::PitchScene(QObject *parent)
     setSceneRect(0, 0, PITCH_W, PITCH_H);
     setBackgroundBrush(Qt::NoBrush);
     initFormationMap();
-    m_formation = QStringLiteral("4-4-2");
+    m_homeFormation = QStringLiteral("4-4-2");
+    m_awayFormation = QStringLiteral("4-4-2");
 }
 
 void PitchScene::setFormation(const QString &formation)
 {
-    m_formation = formation;
+    m_homeFormation = formation;
+    update();
+}
+
+void PitchScene::setHomeFormation(const QString &formation)
+{
+    m_homeFormation = formation;
+    update();
+}
+
+void PitchScene::setAwayFormation(const QString &formation)
+{
+    m_awayFormation = formation;
     update();
 }
 
@@ -97,7 +110,8 @@ QVector<QPointF> PitchScene::formationPositions(
 
 QPointF PitchScene::nearestSnapPosition(const QPointF &scenePos, bool homeTeam) const
 {
-    const QVector<QPointF> pts = formationPositions(m_formation, homeTeam);
+    const QString &f = homeTeam ? m_homeFormation : m_awayFormation;
+    const QVector<QPointF> pts = formationPositions(f, homeTeam);
     if (pts.isEmpty()) return scenePos;
 
     QPointF best = pts.first();
@@ -120,7 +134,8 @@ void PitchScene::setTeamPlayers(const QVector<Models::Player> &players,
     for (PlayerToken *t : tokens) { removeItem(t); delete t; }
     tokens.clear();
 
-    const QVector<QPointF> positions = formationPositions(m_formation, homeTeam);
+    const QVector<QPointF> positions = formationPositions(
+        homeTeam ? m_homeFormation : m_awayFormation, homeTeam);
     const int count = qMin(players.size(), positions.size());
 
     for (int i = 0; i < count; ++i) {
@@ -167,6 +182,13 @@ bool PitchScene::removeToken(int playerId)
     return removeFrom(m_homeTokens) || removeFrom(m_awayTokens);
 }
 
+void PitchScene::setTeamColor(bool homeTeam, const QColor &color)
+{
+    auto &tokens = homeTeam ? m_homeTokens : m_awayTokens;
+    for (PlayerToken *t : tokens)
+        t->setColor(color);
+}
+
 bool PitchScene::addSingleToken(const Models::Player &player,
                                  const QPointF        &scenePos,
                                  bool                  homeTeam,
@@ -175,7 +197,8 @@ bool PitchScene::addSingleToken(const Models::Player &player,
     if (hasToken(player.id)) return false;   // already on pitch
 
     // Snap to nearest empty formation slot
-    const QVector<QPointF> snapPts = formationPositions(m_formation, homeTeam);
+    const QVector<QPointF> snapPts = formationPositions(
+        homeTeam ? m_homeFormation : m_awayFormation, homeTeam);
     auto &tokens = homeTeam ? m_homeTokens : m_awayTokens;
 
     // Find nearest slot not already occupied by another token
@@ -378,16 +401,26 @@ void TacticalPitchView::resizeEvent(QResizeEvent *event)
     fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
-QString TacticalPitchView::formation() const
-{
-    return m_scene->formation();
-}
+QString TacticalPitchView::formation() const     { return m_scene->homeFormation(); }
+QString TacticalPitchView::homeFormation() const { return m_scene->homeFormation(); }
+QString TacticalPitchView::awayFormation() const { return m_scene->awayFormation(); }
 
 void TacticalPitchView::setFormation(const QString &formation)
 {
-    if (m_scene->formation() == formation) return;
-    m_scene->setFormation(formation);
+    setHomeFormation(formation);
+}
+
+void TacticalPitchView::setHomeFormation(const QString &formation)
+{
+    if (m_scene->homeFormation() == formation) return;
+    m_scene->setHomeFormation(formation);
     emit formationChanged(formation);
+}
+
+void TacticalPitchView::setAwayFormation(const QString &formation)
+{
+    if (m_scene->awayFormation() == formation) return;
+    m_scene->setAwayFormation(formation);
 }
 
 void TacticalPitchView::setTeamPlayers(const QVector<Models::Player> &players,
@@ -413,6 +446,16 @@ bool TacticalPitchView::addPlayerToken(const Models::Player &player,
 bool TacticalPitchView::removePlayerToken(int playerId)
 {
     return m_scene->removeToken(playerId);
+}
+
+void TacticalPitchView::setHomeTeamColor(const QColor &color)
+{
+    m_scene->setTeamColor(true, color);
+}
+
+void TacticalPitchView::setAwayTeamColor(const QColor &color)
+{
+    m_scene->setTeamColor(false, color);
 }
 
 QImage TacticalPitchView::exportToImage() const
