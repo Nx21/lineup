@@ -8,7 +8,7 @@
 #include "ui/PlayerRosterWidget.h"
 #include "ui/SuggestionPanel.h"
 #include "ui/SettingsDialog.h"
-#include "DemoData.h"
+#include "data/SquadLoader.h"
 
 #include <QToolBar>
 #include <QListWidget>
@@ -96,25 +96,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     restoreWindowState();
 
-    // Seed / top-up demo data.
-    // Re-seeds whenever a known demo team is missing from the cache,
-    // so adding new teams in DemoData.h is picked up automatically.
+    // Seed all 48 Wikipedia squads from Qt resources.
+    // Only seeds teams that are not yet in the cache so re-runs are fast.
     {
-        const auto demoTeams  = DemoData::allTeams();
-        bool       expired    = false;
-        const auto cached     = m_db->getCachedTeams(&expired);
+        SquadLoader loader;
+        const auto  allTeams  = loader.loadAll();
+        bool        expired   = false;
+        const auto  cached    = m_db->getCachedTeams(&expired);
 
-        // Build set of cached team ids
         QSet<int> cachedIds;
         for (const auto &t : cached) cachedIds.insert(t.id);
 
-        bool needsSeed = false;
-        for (const auto &t : demoTeams)
-            if (!cachedIds.contains(t.id)) { needsSeed = true; break; }
+        QVector<Models::Team> newTeams;
+        for (const auto &t : allTeams)
+            if (!cachedIds.contains(t.id)) newTeams.append(t);
 
-        if (needsSeed) {
-            m_db->cacheTeams(demoTeams);
-            for (const auto &team : demoTeams)
+        if (!newTeams.isEmpty()) {
+            m_db->cacheTeams(newTeams);
+            for (const auto &team : newTeams)
                 m_db->cachePlayers(team.id, team.players);
         }
     }

@@ -1,0 +1,340 @@
+{
+  "teams": [
+    {
+      "id": 1,
+      "name": "Czech Republic",
+      "short": "CZE",
+      "group": "A",
+      "file": "czech_republic.json"
+    },
+    {
+      "id": 2,
+      "name": "Mexico",
+      "short": "MEX",
+      "group": "A",
+      "file": "mexico.json"
+    },
+    {
+      "id": 3,
+      "name": "South Africa",
+      "short": "SOU",
+      "group": "A",
+      "file": "south_africa.json"
+    },
+    {
+      "id": 4,
+      "name": "South Korea",
+      "short": "SOU",
+      "group": "A",
+      "file": "south_korea.json"
+    },
+    {
+      "id": 5,
+      "name": "Bosnia and Herzegovina",
+      "short": "BOS",
+      "group": "B",
+      "file": "bosnia_and_herzegovina.json"
+    },
+    {
+      "id": 6,
+      "name": "Canada",
+      "short": "CAN",
+      "group": "B",
+      "file": "canada.json"
+    },
+    {
+      "id": 7,
+      "name": "Qatar",
+      "short": "QAT",
+      "group": "B",
+      "file": "qatar.json"
+    },
+    {
+      "id": 8,
+      "name": "Switzerland",
+      "short": "SWI",
+      "group": "B",
+      "file": "switzerland.json"
+    },
+    {
+      "id": 9,
+      "name": "Brazil",
+      "short": "BRA",
+      "group": "C",
+      "file": "brazil.json"
+    },
+    {
+      "id": 10,
+      "name": "Haiti",
+      "short": "HAI",
+      "group": "C",
+      "file": "haiti.json"
+    },
+    {
+      "id": 11,
+      "name": "Morocco",
+      "short": "MOR",
+      "group": "C",
+      "file": "morocco.json"
+    },
+    {
+      "id": 12,
+      "name": "Scotland",
+      "short": "SCO",
+      "group": "C",
+      "file": "scotland.json"
+    },
+    {
+      "id": 13,
+      "name": "Australia",
+      "short": "AUS",
+      "group": "D",
+      "file": "australia.json"
+    },
+    {
+      "id": 14,
+      "name": "Paraguay",
+      "short": "PAR",
+      "group": "D",
+      "file": "paraguay.json"
+    },
+    {
+      "id": 15,
+      "name": "Turkey",
+      "short": "TUR",
+      "group": "D",
+      "file": "turkey.json"
+    },
+    {
+      "id": 16,
+      "name": "United States",
+      "short": "UNI",
+      "group": "D",
+      "file": "united_states.json"
+    },
+    {
+      "id": 17,
+      "name": "Curaçao",
+      "short": "CUR",
+      "group": "E",
+      "file": "curacao.json"
+    },
+    {
+      "id": 18,
+      "name": "Ecuador",
+      "short": "ECU",
+      "group": "E",
+      "file": "ecuador.json"
+    },
+    {
+      "id": 19,
+      "name": "Germany",
+      "short": "GER",
+      "group": "E",
+      "file": "germany.json"
+    },
+    {
+      "id": 20,
+      "name": "Ivory Coast",
+      "short": "IVO",
+      "group": "E",
+      "file": "ivory_coast.json"
+    },
+    {
+      "id": 21,
+      "name": "Japan",
+      "short": "JAP",
+      "group": "F",
+      "file": "japan.json"
+    },
+    {
+      "id": 22,
+      "name": "Netherlands",
+      "short": "NET",
+      "group": "F",
+      "file": "netherlands.json"
+    },
+    {
+      "id": 23,
+      "name": "Sweden",
+      "short": "SWE",
+      "group": "F",
+      "file": "sweden.json"
+    },
+    {
+      "id": 24,
+      "name": "Tunisia",
+      "short": "TUN",
+      "group": "F",
+      "file": "tunisia.json"
+    },
+    {
+      "id": 25,
+      "name": "Belgium",
+      "short": "BEL",
+      "group": "G",
+      "file": "belgium.json"
+    },
+    {
+      "id": 26,
+      "name": "Egypt",
+      "short": "EGY",
+      "group": "G",
+      "file": "egypt.json"
+    },
+    {
+      "id": 27,
+      "name": "Iran",
+      "short": "IRA",
+      "group": "G",
+      "file": "iran.json"
+    },
+    {
+      "id": 28,
+      "name": "New Zealand",
+      "short": "NEW",
+      "group": "G",
+      "file": "new_zealand.json"
+    },
+    {
+      "id": 29,
+      "name": "Cape Verde",
+      "short": "CAP",
+      "group": "H",
+      "file": "cape_verde.json"
+    },
+    {
+      "id": 30,
+      "name": "Saudi Arabia",
+      "short": "SAU",
+      "group": "H",
+      "file": "saudi_arabia.json"
+    },
+    {
+      "id": 31,
+      "name": "Spain",
+      "short": "SPA",
+      "group": "H",
+      "file": "spain.json"
+    },
+    {
+      "id": 32,
+      "name": "Uruguay",
+      "short": "URU",
+      "group": "H",
+      "file": "uruguay.json"
+    },
+    {
+      "id": 33,
+      "name": "France",
+      "short": "FRA",
+      "group": "I",
+      "file": "france.json"
+    },
+    {
+      "id": 34,
+      "name": "Iraq",
+      "short": "IRA",
+      "group": "I",
+      "file": "iraq.json"
+    },
+    {
+      "id": 35,
+      "name": "Norway",
+      "short": "NOR",
+      "group": "I",
+      "file": "norway.json"
+    },
+    {
+      "id": 36,
+      "name": "Senegal",
+      "short": "SEN",
+      "group": "I",
+      "file": "senegal.json"
+    },
+    {
+      "id": 37,
+      "name": "Algeria",
+      "short": "ALG",
+      "group": "J",
+      "file": "algeria.json"
+    },
+    {
+      "id": 38,
+      "name": "Argentina",
+      "short": "ARG",
+      "group": "J",
+      "file": "argentina.json"
+    },
+    {
+      "id": 39,
+      "name": "Austria",
+      "short": "AUS",
+      "group": "J",
+      "file": "austria.json"
+    },
+    {
+      "id": 40,
+      "name": "Jordan",
+      "short": "JOR",
+      "group": "J",
+      "file": "jordan.json"
+    },
+    {
+      "id": 41,
+      "name": "Colombia",
+      "short": "COL",
+      "group": "K",
+      "file": "colombia.json"
+    },
+    {
+      "id": 42,
+      "name": "DR Congo",
+      "short": "DR_",
+      "group": "K",
+      "file": "dr_congo.json"
+    },
+    {
+      "id": 43,
+      "name": "Portugal",
+      "short": "POR",
+      "group": "K",
+      "file": "portugal.json"
+    },
+    {
+      "id": 44,
+      "name": "Uzbekistan",
+      "short": "UZB",
+      "group": "K",
+      "file": "uzbekistan.json"
+    },
+    {
+      "id": 45,
+      "name": "Croatia",
+      "short": "CRO",
+      "group": "L",
+      "file": "croatia.json"
+    },
+    {
+      "id": 46,
+      "name": "England",
+      "short": "ENG",
+      "group": "L",
+      "file": "england.json"
+    },
+    {
+      "id": 47,
+      "name": "Ghana",
+      "short": "GHA",
+      "group": "L",
+      "file": "ghana.json"
+    },
+    {
+      "id": 48,
+      "name": "Panama",
+      "short": "PAN",
+      "group": "L",
+      "file": "panama.json"
+    }
+  ]
+}

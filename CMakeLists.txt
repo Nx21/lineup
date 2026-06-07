@@ -33,6 +33,8 @@ set(APP_SOURCES
     src/ui/SettingsDialog.cpp
     src/engine/LineupSuggestionEngine.h
     src/engine/LineupSuggestionEngine.cpp
+    src/data/SquadLoader.h
+    src/data/SquadLoader.cpp
     resources/resources.qrc
 )
 
