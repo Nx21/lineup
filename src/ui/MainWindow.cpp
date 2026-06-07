@@ -289,7 +289,7 @@ void MainWindow::setupSidebar()
     auto *dock = new QDockWidget(QStringLiteral("Teams"), this);
     dock->setObjectName(QStringLiteral("TeamsDock"));
     dock->setWidget(sideWidget);
-    dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
     addDockWidget(Qt::LeftDockWidgetArea, dock);
 
     // Initial button styling
@@ -329,7 +329,7 @@ void MainWindow::setupDocks()
     auto *rosterDock = new QDockWidget(QStringLiteral("Rosters"), this);
     rosterDock->setObjectName(QStringLiteral("RosterDock"));
     rosterDock->setWidget(rosterTabs);
-    rosterDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    rosterDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
     rosterDock->setMinimumWidth(280);
     addDockWidget(Qt::RightDockWidgetArea, rosterDock);
 
@@ -661,6 +661,11 @@ void MainWindow::restoreWindowState()
         restoreGeometry(cfg.value(QStringLiteral("window/geometry")).toByteArray());
     if (cfg.contains(QStringLiteral("window/state")))
         restoreState(cfg.value(QStringLiteral("window/state")).toByteArray());
+
+    // Ensure all docks are visible — a previously floating dock can get hidden
+    // when features are changed to NoDockWidgetFeatures between sessions.
+    for (auto *dock : findChildren<QDockWidget *>())
+        dock->show();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

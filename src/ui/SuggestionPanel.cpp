@@ -26,7 +26,7 @@ SuggestionPanel::SuggestionPanel(QWidget *parent)
 
 void SuggestionPanel::setupUi()
 {
-    setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    setFeatures(QDockWidget::NoDockWidgetFeatures);
     setMinimumWidth(240);
 
     const QString panelStyle =
