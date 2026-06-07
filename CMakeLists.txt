@@ -13,6 +13,7 @@ qt_standard_project_setup()
 
 set(APP_SOURCES
     src/main.cpp
+    src/DemoData.h
     src/api/ApiModels.h
     src/api/ApiClient.h
     src/api/ApiClient.cpp

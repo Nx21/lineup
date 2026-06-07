@@ -8,6 +8,7 @@
 #include "ui/PlayerRosterWidget.h"
 #include "ui/SuggestionPanel.h"
 #include "ui/SettingsDialog.h"
+#include "DemoData.h"
 
 #include <QToolBar>
 #include <QListWidget>
@@ -94,7 +95,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     restoreWindowState();
 
-    // Kick off initial team load
+    // Seed demo data if the cache is empty (works offline, no API key needed)
+    {
+        bool expired = false;
+        const auto cached = m_db->getCachedTeams(&expired);
+        if (cached.isEmpty()) {
+            const auto demoTeams = DemoData::allTeams();
+            m_db->cacheTeams(demoTeams);
+            for (const auto &team : demoTeams)
+                m_db->cachePlayers(team.id, team.players);
+        }
+    }
+
+    // Kick off initial team load (will hit the warm cache immediately)
     m_apiClient->fetchTeams();
 }
 
